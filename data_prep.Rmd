@@ -1,0 +1,39 @@
+---
+title: "Data Prep"
+author: "Emily Halford"
+date: "1/17/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+
+names = read.csv("./data/GNIS Query Result.csv")
+
+colnames(names) = "columns"
+
+names = 
+  names %>% 
+  separate(columns, c("Feature Name", "ID", "Class", "Country", "State", "Latitude", "Longitude", "Ele(ft)", "Map", "BGN Date", "Entry Date"), sep = "[|]") %>%
+  mutate(
+    ID = str_replace(ID, "598673", "598712"),
+    extra_column = NA
+  )
+
+get_dupes(names, ID)
+
+tabyl(names$Class) %>% 
+  knitr::kable()
+## Add crosstabulation
+
+names %>% 
+  remove_empty()
+
+## Don't forget excel to numeric
+
+```
+
