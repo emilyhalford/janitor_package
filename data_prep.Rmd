@@ -1,39 +1,109 @@
 ---
-title: "Data Prep"
+title: "Using the Janitor Package"
 author: "Emily Halford"
-date: "1/17/2021"
+date: "2/08/2021"
 output: html_document
 ---
 
-```{r}
+## Loading Libraries
+
+```{r libraries}
+
 library(tidyverse)
 library(janitor)
+
 ```
 
-```{r}
+## Create place_names
 
-names = read.csv("./data/GNIS Query Result.csv")
+```{r place_names}
 
-colnames(names) = "columns"
+place_names = read.csv("./data/GNIS Query Result.csv")
 
-names = 
-  names %>% 
-  separate(columns, c("Feature Name", "ID", "Class", "Country", "State", "Latitude", "Longitude", "Ele(ft)", "Map", "BGN Date", "Entry Date"), sep = "[|]") %>%
+colnames(place_names) = "columns"
+
+place_names = 
+  place_names %>% 
+  separate(columns, c("Feature Name", "ID", "Class", "County", "State", "Latitude", "Longitude", "Ele(ft)", "Map", "BGN Date", "Entry Date"), sep = "[|]") %>%
+  filter(County == "Berkshire") %>% 
   mutate(
     ID = str_replace(ID, "598673", "598712"),
     extra_column = NA
   )
 
-get_dupes(names, ID)
+```
 
-tabyl(names$Class) %>% 
-  knitr::kable()
-## Add crosstabulation
+## Create non_ma_names
 
-names %>% 
+```{r non_ma}
+
+non_ma_names = read.csv("./data/GNIS Query Result.csv")
+
+colnames(non_ma_names) = "columns"
+
+non_ma_names = 
+  non_ma_names %>% 
+  separate(columns, c("Feature Name", "ID", "Class", "County", "State", "Latitude", "Longitude", "Ele(ft)", "Map", "BGN Date", "Entry Date"), sep = "[|]") %>% 
+  filter(County != "Berkshire") %>% 
+  clean_names() %>% 
+  mutate(
+    ele_ft = as.numeric(ele_ft),
+    map = as.factor(map)
+  )
+
+```
+
+## Using janitor
+
+```{r janitor}
+
+#1 - row_to_names()
+test_names = row_to_names(place_names, 3, remove_row = TRUE, remove_rows_above = TRUE)
+
+#2 - clean_names()
+
+place_names = clean_names(place_names)
+
+#OR
+
+place_names = 
+  place_names %>% 
+  clean_names()
+
+#3 - remove_constant()
+
+place_names = 
+  place_names %>% 
+  remove_constant()
+
+#4 - remove_empty()
+
+place_names = 
+  place_names %>% 
   remove_empty()
 
-## Don't forget excel to numeric
+#5 - compare_df_cols()
+
+#full_data = rbind(place_names, non_ma_names) - doesn't work, use compare_df_cols() to see why
+
+compare_df_cols(place_names, non_ma_names)
+
+#6 - get_dupes()
+
+get_dupes(place_names, id)
+
+#7 - tabyl()
+
+place_names %>% 
+  filter(class %in% "School") %>% 
+tabyl(map) %>% 
+  knitr::kable()
+
+place_names %>% 
+  tabyl(map, class) %>% 
+  adorn_percentages("row") %>% 
+  adorn_pct_formatting(digits = 0) %>% 
+  knitr::kable()
 
 ```
 
