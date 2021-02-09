@@ -96,7 +96,13 @@ get_dupes(place_names, id)
 
 place_names %>% 
   filter(class %in% "School") %>% 
-tabyl(map) %>% 
+  tabyl(map) %>% 
+  knitr::kable()
+
+place_names %>% 
+  tabyl(map, class) %>% 
+  adorn_percentages("col") %>% 
+  adorn_pct_formatting(digits = 0) %>% 
   knitr::kable()
 
 place_names %>% 
